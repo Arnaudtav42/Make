@@ -1,35 +1,57 @@
-NAME = libftprintf.a
-SRC = 					 	ft_get_flags.c \
-							ft_write_int.c \
-							ft_write_char.c \
-							ft_write_str.c \
-							ft_write_unsigned.c \
-							ft_printf.c\
-							
-OBJ = ${SRC:.c=.o}
-CC = gcc
-RM = rm -rf
-FLAGS = -Wall -Wextra -Werror
+NAME :=so_long
 
-all: ${NAME}
+INCLUDES 		:= ./includes
+PATH_SRC 		:= ./src
 
-.c.o:
-		${CC} ${FLAGS} -c $< -o $@
+PATH_LIBFT 		:= ${INCLUDES}/libft
+libftincludes 	:= ${PATH_LIBFT}/
+libft.a 		:= ${PATH_LIBFT}/libft.a
 
-${NAME} : ${OBJ}
-		${MAKE} all -C ./libft
-		cp libft/libft.a ${NAME}
-		ar rcs ${NAME} ${OBJ}
-all: ${NAME}
+PATH_GNL        := ${INCLUDES}/gnl
+gnlincludes 	:= ${PATH_GNL}/
+gnl.a			:= ${PATH_GNL}/gnl.a
+
+SRC 			:= src/draw.c \
+					src/exit.c \
+					src/main.c \
+					src/parseur.c \
+					src/utils.c \
+					src/utils2.c
+
+OBJS 			:=${SRC:.c=.o}
+bin 			:=./${NAME}
+
+#MY_CFLAGS 		:=-Wshadow -Wdouble-promotion -std=c89 -Os -pipe
+CFLAG  			:=-Wall -Wextra -Werror -fsanitize=address
+MY_CPPFLAGS		:=-I${INCLUDES} -I${libftincludes} -I${mlxincludes} -I${gnlincludes}
+
+CC 				:= gcc
+CFLAGS			:=${CFLAG} ${MY_CFLAGS} 
+CPPFLAGS		:=${MY_CPPFLAGS}
+LDLIBS     		:=$(libft.a) ${gnl.a}  -lmlx -framework OpenGL -framework AppKit
+
+
+all:
+	@$(MAKE) -j $(NAME)
+
+${NAME}: ${OBJS}
+			@$(MAKE) -j -s --no-print-directory -C includes/libft/
+			@$(MAKE) -j -s --no-print-directory -C includes/gnl/
+			$(CC) $(LDLIBS) $(CFLAGS) ${OBJS} includes/libft/libft.a includes/gnl/gnl.a -o ${NAME}
+
+%.o : %.c
+		${CC} -c ${CPPFLAGS} ${CFLAGS} -o $@ $<
 
 clean:
-		${MAKE} clean -C ./libft
-		${RM} $(OBJ)
+		@$(MAKE) -s --no-print-directory -C includes/libft/ clean
+			@$(MAKE) -s --no-print-directory -C includes/gnl/ clean
+			${RM} ${OBJS}
 
-fclean: clean
-		${MAKE} fclean -C ./libft
-		${RM} $(NAME)
+fclean: 	clean
+			@$(MAKE) -s --no-print-directory -C includes/libft/ fclean
+			@$(MAKE) -s --no-print-directory -C includes/gnl/ fclean
+			${RM} ${bin}
 
-re: fclean ${NAME} 
+re: 		fclean all
 
-.PHONY: libftprintf.a all clean fclean re
+.PHONY: all clean fclean re
